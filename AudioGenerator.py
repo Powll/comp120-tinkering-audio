@@ -30,15 +30,6 @@ MAX_VALUE = 32767.0
 FREQUENCY = 350
 VOLUME = 1
 
-noise_out = wave.open(OUTPUT_FILENAME, 'w')
-
-noise_out.setparams((NCHANNELS,
-                     SAMPWIDTH,
-                     FRAMERATE,
-                     NFRAMES,
-                     COMPNAME,
-                     COMPTYPE))
-
 
 def import_sound(file_path=INPUT_DIRECTORY,
                  file_name=INPUT_FILENAME + AUDIO_FORMAT['wav']['extension'],
@@ -50,7 +41,7 @@ def import_sound(file_path=INPUT_DIRECTORY,
     :param file_path: path of file, EXCLUDING self
     :param file_format: format of file (e.g. ".wav")
     :param operation: supported arguments: "w", "r", "wb", "rb"
-    :return: one of the following: a wave file, -more to be added-
+    :return: a readable/writeable audio file
     """
 
     try:
@@ -75,7 +66,7 @@ def import_sound(file_path=INPUT_DIRECTORY,
               'not found')
 
 
-def export_sound(tones,
+def export_sound(tone,
                  file_path=OUTPUT_DIRECTORY,
                  file_name=OUTPUT_FILENAME + AUDIO_FORMAT['wav']['extension'],
                  file_format='wav',
@@ -89,7 +80,7 @@ def export_sound(tones,
 
     """
     Exports an audio file in a given format
-    :param tones: list of tone to be exported
+    :param tone: list of tone to be exported
     :param file_path: directory to export to
     :param file_name: name of exported file
     :param file_format: format of exported file
@@ -102,7 +93,7 @@ def export_sound(tones,
 
     export.writeframes(
         package(
-            tones, AUDIO_FORMAT[file_format]['pack_method']
+            tone, AUDIO_FORMAT[file_format]['pack_method']
         )
     )
 
@@ -135,7 +126,14 @@ def sin_wave(position, frequency, amplitude):
 
 
 def get_key(key):
-    return AudioHelper.BASE_NOTES(key[0] + '0') * (2 ** int(key[1]))
+
+    """
+    Returns the corresponding frequency of a note in Hz
+    :param key: string containing the note and the level e.g. C7
+    :return: (int) frequency in Hz
+    """
+
+    return int(AudioHelper.BASE_NOTES[key[0] + '0'] * (2 ** int(key[1]))) + 1
 
 
 def combine_tones(*tones):
@@ -165,12 +163,12 @@ def combine_tones(*tones):
     return values
 
 
-def package(tone_list, package_type='h'):
+def package(tone, package_type='h'):
 
     values = []
 
-    for i in range(0, len(tone_list)):
-        packed_value = struct.pack(package_type, int(tone_list[i]))
+    for i in range(0, len(tone)):
+        packed_value = struct.pack(package_type, int(tone[i]))
         values.append(packed_value)
 
     print('Finished packaging')
@@ -186,7 +184,10 @@ screen = pygame.display.set_mode((100, 100))
 while True:
     for event in pygame.event.get():
         if event.type == pygame.KEYDOWN and event.key == pygame.K_a:
-            export_sound(combine_tones(generate_tone(262, 1000), generate_tone(524, 1000)))
+            export_sound(combine_tones(generate_tone(get_key('C4'), 1000),
+                                       generate_tone(get_key('C5'), 1000)
+                                       )
+                         )
         elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
             pygame.quit()
             from sys import exit
@@ -194,4 +195,6 @@ while True:
         elif event.type == pygame.KEYDOWN and event.key == pygame.K_d:
             pygame.mixer.music.load('./Resources/Audio/Ambient/output.wav')
             pygame.mixer.music.play(5, 0.0)
+        elif event.type == pygame.KEYDOWN and event.key == pygame.K_e:
+            print(str(get_key('C5')))
 
