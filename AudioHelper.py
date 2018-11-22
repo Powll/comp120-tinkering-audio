@@ -14,3 +14,39 @@ BASE_NOTES = dict(
     AS=29.14,
     B0=30.87
 )
+
+# Dictionary containing the ambient sound types:
+
+AMBIENT_SOUND_TYPES = dict(
+    wind=dict(
+        calm=[],
+        storm=[]
+    ),
+    water=dict(
+        flowing=[],
+        waterfall=[]
+    )
+)
+
+# Dictionary for supported formats and the required packaging:
+
+AUDIO_FORMAT = dict(
+    wav=dict(
+        pack_method='h',
+        extension='.wav'
+    ),
+    ogg=dict(
+        pack_method='',
+        extension='.ogg'
+    ),
+)
+
+# Arguments used in exporting audio files
+
+OUTPUT_FILENAME = 'output'  # Default name used in exporting
+OUTPUT_DIRECTORY = './Resources/Audio/Ambient/'  # Default directory
+
+# Arguments used in importing audio files
+
+INPUT_FILENAME = 'input'
+INPUT_DIRECTORY = './Resources/Audio/Imports/'

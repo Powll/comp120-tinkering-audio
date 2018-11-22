@@ -6,11 +6,19 @@ import AudioHelper
 import numpy
 import scipy
 import pygame
+from pathlib import Path
+
+from AudioHelper import AMBIENT_SOUND_TYPES,\
+    AUDIO_FORMAT, \
+    OUTPUT_DIRECTORY,\
+    OUTPUT_FILENAME, \
+    INPUT_FILENAME, \
+    INPUT_DIRECTORY
 
 # in seconds
 LENGTH_OF_FILE_IN_SECONDS = 6
 
-OUTPUT_FILENAME = 'output.wav'
+
 
 NCHANNELS = 1
 SAMPWIDTH = 2
@@ -30,6 +38,75 @@ noise_out.setparams((NCHANNELS,
                      NFRAMES,
                      COMPNAME,
                      COMPTYPE))
+
+
+def import_sound(file_path=INPUT_DIRECTORY,
+                 file_name=INPUT_FILENAME + AUDIO_FORMAT['wav']['extension'],
+                 file_format='wav',
+                 operation='r'):
+    """
+    Returns an audio object based on given arguments
+    :param file_name: name of file, INCLUDING extension
+    :param file_path: path of file, EXCLUDING self
+    :param file_format: format of file (e.g. ".wav")
+    :param operation: supported arguments: "w", "r", "wb", "rb"
+    :return: one of the following: a wave file, -more to be added-
+    """
+
+    try:
+
+        if Path(file_path + file_name).exists():
+            try:
+
+                if AUDIO_FORMAT[file_format]['extension']\
+                        == AUDIO_FORMAT['wav']['extension']:
+                    return wave.open(file_path + file_name, operation)
+
+            except ImportError:
+
+                raise Exception('File format',
+                                '.' + file_format,
+                                'not supported')
+
+    except FileNotFoundError:
+
+        print('File',
+              file_path + file_name + '.' + file_format,
+              'not found')
+
+
+def export_sound(tones,
+                 file_path=OUTPUT_DIRECTORY,
+                 file_name=OUTPUT_FILENAME + AUDIO_FORMAT['wav']['extension'],
+                 file_format='wav',
+                 file_params=(NCHANNELS,
+                              SAMPWIDTH,
+                              FRAMERATE,
+                              NFRAMES,
+                              COMPNAME,
+                              COMPTYPE)
+                 ):
+
+    """
+    Exports an audio file in a given format
+    :param tones: list of tone to be exported
+    :param file_path: directory to export to
+    :param file_name: name of exported file
+    :param file_format: format of exported file
+    :param file_params: parameters of exported file
+    """
+
+    export = wave.open(file_path + file_name, 'wb')
+
+    export.setparams(file_params)
+
+    export.writeframes(
+        package(
+            tones, AUDIO_FORMAT[file_format]['pack_method']
+        )
+    )
+
+    export.close()
 
 
 def generate_tone(frequency, amplitude):
@@ -88,12 +165,12 @@ def combine_tones(*tones):
     return values
 
 
-def package(tone_list):
+def package(tone_list, package_type='h'):
 
     values = []
 
     for i in range(0, len(tone_list)):
-        packed_value = struct.pack('h', int(tone_list[i]))
+        packed_value = struct.pack(package_type, int(tone_list[i]))
         values.append(packed_value)
 
     print('Finished packaging')
@@ -109,14 +186,12 @@ screen = pygame.display.set_mode((100, 100))
 while True:
     for event in pygame.event.get():
         if event.type == pygame.KEYDOWN and event.key == pygame.K_a:
-            noise_out.writeframes(
-                package(combine_tones(generate_tone(262, 1000), generate_tone(524, 1000))))
-            noise_out.close()
+            export_sound(combine_tones(generate_tone(262, 1000), generate_tone(524, 1000)))
         elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
             pygame.quit()
             from sys import exit
             exit()
         elif event.type == pygame.KEYDOWN and event.key == pygame.K_d:
-            pygame.mixer.music.load('output.wav')
+            pygame.mixer.music.load('./Resources/Audio/Ambient/output.wav')
             pygame.mixer.music.play(5, 0.0)
 
