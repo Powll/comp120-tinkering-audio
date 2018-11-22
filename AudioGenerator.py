@@ -69,6 +69,11 @@ def import_sound(file_path=INPUT_DIRECTORY,
               'not found')
 
 
+def tone_to_wind(tone, noise_factor=0.2):
+    # TODO: implement sample variation based on a factor
+    pass
+
+
 def export_sound(tone,
                  file_path=OUTPUT_DIRECTORY,
                  file_name=OUTPUT_FILENAME + AUDIO_FORMAT['wav']['extension'],
