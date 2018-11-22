@@ -5,6 +5,7 @@ import AudioHelper
 
 import numpy
 import scipy
+import types
 import pygame
 from pathlib import Path
 
@@ -15,10 +16,12 @@ from AudioHelper import AMBIENT_SOUND_TYPES,\
     INPUT_FILENAME, \
     INPUT_DIRECTORY
 
+# TODO: format all the functions below into a single Audio class
+
 # in seconds
 LENGTH_OF_FILE_IN_SECONDS = 6
 
-
+# TODO: move constants to AudioHelper
 
 NCHANNELS = 1
 SAMPWIDTH = 2
@@ -100,20 +103,58 @@ def export_sound(tone,
     export.close()
 
 
-def generate_tone(frequency, amplitude):
+def adsr_envelope(tone,
+                  peak_level,
+                  attack_time,
+                  decay_time,
+                  sustain_level,
+                  sustain_time,
+                  release_time,
+                  ):
+    # TODO: implement this function, separately or within the sine wave
+    pass
+
+
+def echo(filename, delay):
+    s1 = wave.open(filename, "r")
+
+
+def generate_tone(frequency, amplitude, wave_type='sine'):
 
     values = []
 
+    if isinstance(frequency, str):
+        frequency = get_key(frequency)
+
     for i in range(0, NFRAMES):
-        value = numpy.sin(
-            2.0 * numpy.pi
-            * frequency
-            * float((i / FRAMERATE)))\
-            * amplitude     # maybe replace with parameters?
+        value = \
+            triangle_wave(i, frequency, amplitude) if 'triangle' in wave_type\
+            else sin_wave(i, frequency, amplitude)
 
         values.append(value)
 
     return values
+
+
+def samples(tone):
+
+    return range(0, len(tone))
+
+
+def normalize(tone):
+    """
+    Normalizes a given tone
+    :param tone: the tone to be normalized
+    :return: a normalized tone
+    """
+    max_value = max(tone)
+
+    modifier = float(MAX_VALUE / max_value)
+
+    for i in samples(tone):
+        tone[i] *= modifier
+
+    return tone
 
 
 def sin_wave(position, frequency, amplitude):
@@ -123,6 +164,12 @@ def sin_wave(position, frequency, amplitude):
             * frequency
             * float((position / FRAMERATE)))\
             * MAX_VALUE / amplitude
+
+
+def triangle_wave(position, frequency, amplitude):
+
+    return ((2.0 * amplitude) / numpy.pi) *\
+        numpy.arcsin(numpy.sin((2.0 * numpy.pi * position) / frequency))
 
 
 def get_key(key):
@@ -137,9 +184,8 @@ def get_key(key):
 
 
 def combine_tones(*tones):
-    """
 
-    """
+    # TODO: add docstring
 
     values = []
 
@@ -165,6 +211,8 @@ def combine_tones(*tones):
 
 def package(tone, package_type='h'):
 
+    # TODO: add docstring, add support for multiple tones(?)
+
     values = []
 
     for i in range(0, len(tone)):
@@ -184,10 +232,7 @@ screen = pygame.display.set_mode((100, 100))
 while True:
     for event in pygame.event.get():
         if event.type == pygame.KEYDOWN and event.key == pygame.K_a:
-            export_sound(combine_tones(generate_tone(get_key('C4'), 1000),
-                                       generate_tone(get_key('C5'), 1000)
-                                       )
-                         )
+            export_sound(normalize(combine_tones(generate_tone(110, 1000), generate_tone(112, 1000))))
         elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
             pygame.quit()
             from sys import exit

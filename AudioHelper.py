@@ -18,13 +18,14 @@ BASE_NOTES = dict(
 # Dictionary containing the ambient sound types:
 
 AMBIENT_SOUND_TYPES = dict(
+    custom='custom',
     wind=dict(
-        calm=[],
-        storm=[]
+        calm='wind_calm',
+        storm='wind_storm'
     ),
     water=dict(
-        flowing=[],
-        waterfall=[]
+        flowing='water_flowing',
+        waterfall='water_waterfall'
     )
 )
 
