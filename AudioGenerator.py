@@ -16,17 +16,23 @@ from AudioHelper import AMBIENT_SOUND_TYPES,\
     INPUT_FILENAME, \
     INPUT_DIRECTORY
 
+"""
+CONTRACT 2 - AMBIENT SOUND GENERATION
+TAKEN OWNERSHIP BY PAUL
+WITH HELP FROM FELLOW TEAM MEMBERS: ADRIAN< CYRUS AND JAKOB
+"""
+
 # TODO: format all the functions below into a single Audio class
 
 # in seconds
-LENGTH_OF_FILE_IN_SECONDS = 6
+LENGTH_OF_FILE_IN_SECONDS = 0.3
 
 # TODO: move constants to AudioHelper
 
 NCHANNELS = 1
 SAMPWIDTH = 2
 FRAMERATE = 44100
-NFRAMES = FRAMERATE * LENGTH_OF_FILE_IN_SECONDS
+NFRAMES = int(FRAMERATE * LENGTH_OF_FILE_IN_SECONDS)
 COMPTYPE = "NONE"
 COMPNAME = "NONE"
 MAX_VALUE = 32767.0
@@ -46,6 +52,8 @@ def import_sound(file_path=INPUT_DIRECTORY,
     :param operation: supported arguments: "w", "r", "wb", "rb"
     :return: a readable/writeable audio file
     """
+
+    # TODO: fix this function
 
     try:
 
@@ -120,12 +128,14 @@ def adsr_envelope(tone,
     pass
 
 
-def echo(filename, delay):
-    s1 = wave.open(filename, "r")
-
-
 def generate_tone(frequency, amplitude, wave_type='sine'):
-
+    """
+    Generates a tone based on certain parameters
+    :param frequency:
+    :param amplitude:
+    :param wave_type: By default, sine (can also be triangle)
+    :return: generated tone
+    """
     values = []
 
     if isinstance(frequency, str):
@@ -142,6 +152,9 @@ def generate_tone(frequency, amplitude, wave_type='sine'):
 
 
 def samples(tone):
+    """
+    Returns a range from 0 to the final sample in a given tone
+    """
 
     return range(0, len(tone))
 
@@ -162,8 +175,44 @@ def normalize(tone):
     return tone
 
 
-def sin_wave(position, frequency, amplitude):
+def double_frequency(tone):
+    """
+    Doubles the frequency of a given tone
+    """
+    new_tone = []
+    new_tone_index = 0
 
+    for i in range(0, len(tone), 2):
+        value = tone[i]
+        new_tone.insert(new_tone_index, value)
+        new_tone_index += 1
+
+    return new_tone
+
+
+def halve_frequency(tone):
+    """
+    Halves the frequency of a given tone
+    """
+    new_tone = []
+    tone_index = 0.0
+
+    for new_tone_index in range(0, len(tone) * 2):
+        value = tone[int(tone_index)]
+        new_tone.insert(new_tone_index, value)
+        new_tone_index += 0.5
+
+    return new_tone
+
+
+def sin_wave(position, frequency, amplitude):
+    """
+    Returns the y-axis coordinate of a sine wave
+    :param position: on the x-axis
+    :param frequency:
+    :param amplitude:
+    :return: y-axis coordinate
+    """
     return numpy.sin(
             2.0 * numpy.pi
             * frequency
@@ -172,6 +221,13 @@ def sin_wave(position, frequency, amplitude):
 
 
 def triangle_wave(position, frequency, amplitude):
+    """
+    Returns the y-axis coordinate of a triangle wave
+    :param position: on the x-axis
+    :param frequency:
+    :param amplitude:
+    :return: y-axis coordinate
+    """
 
     return ((2.0 * amplitude) / numpy.pi) *\
         numpy.arcsin(numpy.sin((2.0 * numpy.pi * position) / frequency))
@@ -190,7 +246,11 @@ def get_key(key):
 
 def combine_tones(*tones):
 
-    # TODO: add docstring
+    """
+    Combines(overlaps) an indefinite number of tones
+    :param tones: tones to combine
+    :return: final tone
+    """
 
     values = []
 
@@ -216,7 +276,12 @@ def combine_tones(*tones):
 
 def package(tone, package_type='h'):
 
-    # TODO: add docstring, add support for multiple tones(?)
+    """
+    Packages a tone into a given format. By default, short (h)
+    :param tone: tone to package
+    :param package_type: packing method (h - short, f - float etc.)
+    :return: a byte stream containing the tone
+    """
 
     values = []
 
@@ -229,15 +294,75 @@ def package(tone, package_type='h'):
     return b''.join(values)
 
 
+def echo(tone, delay=1000):
+
+    """
+    Returns an echoed tone with a given delay, by default 1 second
+    :param tone: tone to echo
+    :param delay: echo delay
+    :return: echoed tone
+    """
+
+    tone_index = 0
+
+    for i in samples(tone):
+        if i > delay:
+            tone[i] += tone[tone_index] * 0.6
+            tone_index += 1
+
+    return tone
+
+
+def append_tone(base, *tones):
+    """
+    Appends all the given tones to a base tone
+    :param base: tone to append to (first tone)
+    :param tones: list of tones to append
+    :return: a list containing all the tones
+    """
+    for tone in tones:
+        for i in samples(tone):
+            base.append(tone[i])
+
+    return base
+
+
+# TODO: doubling/halving wind sound frequency (calm, medium, storm)
+
+# TODO: envelopes
+
 pygame.init()
 pygame.display.init()
+pygame.display.set_caption('Audio Generator')
 
-screen = pygame.display.set_mode((100, 100))
+screen = pygame.display.set_mode((300, 100))
+
+
+"""
+USAGE: the following order MUST be respected:
+export_sound
+normalize
+halve/double AND/OR echo
+append_tone AND/OR combine_tone
+generate_tone
+"""
 
 while True:
     for event in pygame.event.get():
         if event.type == pygame.KEYDOWN and event.key == pygame.K_a:
-            export_sound(normalize(combine_tones(generate_tone(110, 1000), generate_tone(112, 1000))))
+            """
+            PLEASE TEST SOUND GENERATION BELOW
+            """
+            export_sound(normalize(echo(append_tone(generate_tone("C3", 1000),
+                                                    generate_tone("C2", 1000),
+                                                    generate_tone("A3", 1000)
+                                                    )
+                                        )
+                                   )
+                         )
+            """
+            PLEASE TEST SOUND GENERATION ABOVE
+            """
         elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
             pygame.quit()
             from sys import exit
